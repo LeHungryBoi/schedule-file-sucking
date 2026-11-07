@@ -1,0 +1,6 @@
+{
+  "name": "APK Sweeper",
+  "description": "Automated periodic cleaner for APK files in the Downloads folder with low-power background scheduling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
