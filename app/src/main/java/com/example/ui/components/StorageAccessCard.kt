@@ -8,8 +8,8 @@ import android.os.Environment
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun StorageAccessCard(
@@ -58,14 +59,12 @@ fun StorageAccessCard(
 ) {
     val context = LocalContext.current
 
-    // SAF Folder Picker launcher
     val folderPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
         onFolderSelected(uri)
     }
 
-    // Storage permission launcher for Android 10 & below
     val legacyPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { _ ->
@@ -75,116 +74,121 @@ fun StorageAccessCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(10.dp)
+            )
             .testTag("storage_access_card"),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (hasStorageAccess) MaterialTheme.colorScheme.surface
-            else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (hasStorageAccess) MaterialTheme.colorScheme.secondaryContainer
-                            else MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (hasStorageAccess) Icons.Default.CheckCircle else Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = if (hasStorageAccess) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(26.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (hasStorageAccess) MaterialTheme.colorScheme.secondaryContainer
+                                else MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+                            )
+                            .border(
+                                1.dp,
+                                if (hasStorageAccess) MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+                                else MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (hasStorageAccess) Icons.Default.CheckCircle else Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = if (hasStorageAccess) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                Column {
-                    Text(
-                        text = if (hasStorageAccess) "Storage Access Active" else "Storage Permission Needed",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Current folder: $folderDisplayName",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
-                    )
+                    Column {
+                        Text(
+                            text = if (hasStorageAccess) "Storage Access Active" else "Storage Permission Needed",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, fontSize = 14.sp),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Download target: $folderDisplayName",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
             if (hasStorageAccess) {
-                Text(
-                    text = "The background cleaner has permission to read and delete .apk installer files in this directory.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     OutlinedButton(
                         onClick = { folderPickerLauncher.launch(null) },
                         modifier = Modifier
                             .weight(1f)
+                            .height(34.dp)
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f), RoundedCornerShape(6.dp))
                             .testTag("change_folder_button"),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(6.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.FolderOpen,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Change Folder", style = MaterialTheme.typography.labelMedium)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Pick Custom Folder", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp))
                     }
 
                     if (!customFolderUri.isNullOrEmpty()) {
                         OutlinedButton(
                             onClick = onResetToDefault,
-                            modifier = Modifier.testTag("reset_folder_button"),
-                            shape = RoundedCornerShape(10.dp)
+                            modifier = Modifier
+                                .height(34.dp)
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f), RoundedCornerShape(6.dp))
+                                .testTag("reset_folder_button"),
+                            shape = RoundedCornerShape(6.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.RestartAlt,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Reset", style = MaterialTheme.typography.labelMedium)
+                            Text("Reset", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp))
                         }
                     }
                 }
             } else {
-                Text(
-                    text = "To delete .apk files automatically in the background, Android requires either All Files Access or selecting the folder with the system picker.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = "To allow APK cleanups without user prompts on Android 11+, grant All Files Access or choose a folder.",
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Option 1: All files access (Android 11+)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         Button(
                             onClick = {
@@ -200,8 +204,9 @@ fun StorageAccessCard(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .height(34.dp)
                                 .testTag("grant_all_files_button"),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(6.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
@@ -209,10 +214,10 @@ fun StorageAccessCard(
                             Icon(
                                 imageVector = Icons.Default.Security,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(14.dp)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Grant All Files Access (Direct)", fontWeight = FontWeight.SemiBold)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Grant All Files Access", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 11.sp))
                         }
                     } else {
                         Button(
@@ -221,28 +226,30 @@ fun StorageAccessCard(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .height(34.dp)
                                 .testTag("grant_storage_button"),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(6.dp)
                         ) {
-                            Text("Grant Storage Permission", fontWeight = FontWeight.SemiBold)
+                            Text("Grant Storage Permission", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 11.sp))
                         }
                     }
 
-                    // Option 2: Select folder using Storage Access Framework
                     OutlinedButton(
                         onClick = { folderPickerLauncher.launch(null) },
                         modifier = Modifier
                             .fillMaxWidth()
+                            .height(34.dp)
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
                             .testTag("select_folder_saf_button"),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(6.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.CreateNewFolder,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Or Select Download Folder via Picker", fontWeight = FontWeight.Medium)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Or Select Directory via SAF Picker", style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
                     }
                 }
             }

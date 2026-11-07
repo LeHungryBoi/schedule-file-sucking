@@ -15,7 +15,8 @@ object WorkManagerScheduler {
     fun scheduleOrCancel(context: Context, config: ScheduleConfig) {
         val workManager = WorkManager.getInstance(context)
 
-        if (!config.isEnabled) {
+        // Cancel if automation disabled or neither cleaner is active
+        if (!config.isEnabled || (!config.cleanApksEnabled && !config.cleanScreenshotsEnabled)) {
             workManager.cancelUniqueWork(ApkCleanupWorker.WORK_NAME)
             return
         }
@@ -28,7 +29,14 @@ object WorkManagerScheduler {
         val periodicWorkRequest = when (config.mode) {
             ScheduleMode.INTERVAL -> {
                 val intervalDays = config.toIntervalDays()
+                // Precise time-of-day alignment for interval runs
+                val initialDelayMillis = FormatUtils.calculateInitialDelayForTime(
+                    targetHour = config.targetHour,
+                    targetMinute = config.targetMinute
+                )
+
                 PeriodicWorkRequestBuilder<ApkCleanupWorker>(intervalDays, TimeUnit.DAYS)
+                    .setInitialDelay(initialDelayMillis, TimeUnit.MILLISECONDS)
                     .setConstraints(constraints)
                     .build()
             }

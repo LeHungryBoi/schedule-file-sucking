@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">APK Sweeper</string>
-    <string name="automation_title">Automatic Cleanup</string>
-    <string name="automation_desc">Periodically purges .apk files from your Downloads directory</string>
+    <string name="app_name">Storage Sweeper</string>
+    <string name="automation_title">Automated Sweeper</string>
+    <string name="automation_desc">Periodically purges APK downloads and expired screenshots</string>
     <string name="clean_now">Clean Now</string>
     <string name="interval_title">Cleanup Schedule</string>
     <string name="days_unit">Days</string>
@@ -10,5 +10,5 @@
     <string name="grant_permission">Grant Storage Access</string>
     <string name="select_folder">Select Download Folder</string>
     <string name="storage_info_title">Battery &amp; CPU Efficiency</string>
-    <string name="storage_info_body">APK Sweeper does not run a countdown service in the background. It registers an OS-level WorkManager job that only wakes up when your interval arrives.</string>
+    <string name="storage_info_body">Sweeper does not run a permanent background service. It registers an OS-level WorkManager job that only wakes up when your interval arrives.</string>
 </resources>

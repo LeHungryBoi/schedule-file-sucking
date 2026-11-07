@@ -1,6 +1,6 @@
 {
-  "name": "APK Sweeper",
-  "description": "Automated periodic cleaner for APK files in the Downloads folder with low-power background scheduling.",
+  "name": "Storage Sweeper",
+  "description": "High-density automated background cleaner for APK downloads and aged screenshots with custom retention rules.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

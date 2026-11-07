@@ -53,7 +53,15 @@ object FormatUtils {
     }
 
     fun formatScheduleSummary(config: ScheduleConfig): String {
-        if (!config.isEnabled) return "Automation is paused"
+        if (!config.isEnabled) return "Automation paused"
+        val timeStr = formatTimeOnly(config.targetHour, config.targetMinute)
+        val targets = when {
+            config.cleanApksEnabled && config.cleanScreenshotsEnabled -> "APKs & Screenshots (>${config.screenshotMaxAgeDays}d)"
+            config.cleanApksEnabled -> "APKs only"
+            config.cleanScreenshotsEnabled -> "Screenshots only (>${config.screenshotMaxAgeDays}d)"
+            else -> "Nothing selected"
+        }
+
         return when (config.mode) {
             ScheduleMode.INTERVAL -> {
                 val value = config.intervalValue
@@ -62,14 +70,37 @@ object FormatUtils {
                     IntervalUnit.WEEKS -> if (value == 1) "week" else "weeks"
                     IntervalUnit.MONTHS -> if (value == 1) "month" else "months"
                 }
-                "Runs every $value $unitLabel"
+                "Every $value $unitLabel at $timeStr • $targets"
             }
             ScheduleMode.DAY_OF_WEEK -> {
                 val day = getDayOfWeekName(config.dayOfWeek)
-                val time = formatTimeOnly(config.targetHour, config.targetMinute)
-                "Runs every $day at $time"
+                "Every $day at $timeStr • $targets"
             }
         }
+    }
+
+    /**
+     * Calculates initial delay in milliseconds to the next occurrence of targetHour:targetMinute
+     */
+    fun calculateInitialDelayForTime(
+        targetHour: Int,
+        targetMinute: Int,
+        now: Calendar = Calendar.getInstance()
+    ): Long {
+        val target = Calendar.getInstance().apply {
+            timeInMillis = now.timeInMillis
+            set(Calendar.HOUR_OF_DAY, targetHour)
+            set(Calendar.MINUTE, targetMinute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        // If target time already passed today, advance to tomorrow
+        if (target.timeInMillis <= now.timeInMillis) {
+            target.add(Calendar.DAY_OF_YEAR, 1)
+        }
+
+        return target.timeInMillis - now.timeInMillis
     }
 
     /**
@@ -109,13 +140,8 @@ object FormatUtils {
 
         when (config.mode) {
             ScheduleMode.INTERVAL -> {
-                val intervalMillis = config.toIntervalDays() * 24L * 60L * 60L * 1000L
-                val base = if (lastRunTimestamp > 0) lastRunTimestamp else now.timeInMillis
-                var next = base + intervalMillis
-                while (next <= now.timeInMillis) {
-                    next += intervalMillis
-                }
-                nextCal.timeInMillis = next
+                val delay = calculateInitialDelayForTime(config.targetHour, config.targetMinute, now)
+                nextCal.timeInMillis = now.timeInMillis + delay
             }
             ScheduleMode.DAY_OF_WEEK -> {
                 val delay = calculateInitialDelayForDayOfWeek(
@@ -130,5 +156,35 @@ object FormatUtils {
 
         val sdf = SimpleDateFormat("EEE, MMM d • h:mm a", Locale.getDefault())
         return sdf.format(nextCal.time)
+    }
+
+    fun formatAgeString(ageDays: Double): String {
+        return when {
+            ageDays >= 365.0 -> String.format(Locale.getDefault(), "%.1fy ago", ageDays / 365.0)
+            ageDays >= 30.0 -> String.format(Locale.getDefault(), "%.0fmo ago", ageDays / 30.0)
+            ageDays >= 1.0 -> String.format(Locale.getDefault(), "%.1fd ago", ageDays)
+            else -> {
+                val hours = (ageDays * 24.0).toInt()
+                if (hours >= 1) "${hours}h ago"
+                else {
+                    val mins = (ageDays * 24.0 * 60.0).toInt()
+                    "${mins.coerceAtLeast(1)}m ago"
+                }
+            }
+        }
+    }
+
+    fun formatCountdown(remainingMillis: Long): String {
+        if (remainingMillis <= 0L) return "Expired"
+        val totalSec = remainingMillis / 1000
+        val hours = totalSec / 3600
+        val mins = (totalSec % 3600) / 60
+        val days = hours / 24
+
+        return when {
+            days >= 1 -> "${days}d ${hours % 24}h left"
+            hours >= 1 -> "${hours}h ${mins}m left"
+            else -> "${mins.coerceAtLeast(1)}m left"
+        }
     }
 }

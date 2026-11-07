@@ -22,7 +22,7 @@ class ExampleRobolectricTest {
   fun `read app name string from context`() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val appName = context.getString(R.string.app_name)
-    assertEquals("APK Sweeper", appName)
+    assertEquals("Storage Sweeper", appName)
   }
 
   @Test
@@ -47,6 +47,15 @@ class ExampleRobolectricTest {
   }
 
   @Test
+  fun `target time initial delay is positive`() {
+    val delay = FormatUtils.calculateInitialDelayForTime(
+      targetHour = 3,
+      targetMinute = 30
+    )
+    assertTrue("Initial delay must be greater than zero", delay > 0)
+  }
+
+  @Test
   fun `day of week initial delay is positive`() {
     val delay = FormatUtils.calculateInitialDelayForDayOfWeek(
       targetDayOfWeek = Calendar.SUNDAY,
@@ -54,5 +63,12 @@ class ExampleRobolectricTest {
       targetMinute = 0
     )
     assertTrue("Initial delay must be greater than zero", delay > 0)
+  }
+
+  @Test
+  fun `formatAgeString formats correctly`() {
+    assertEquals("1.0d ago", FormatUtils.formatAgeString(1.0))
+    assertEquals("3.5d ago", FormatUtils.formatAgeString(3.5))
+    assertEquals("12h ago", FormatUtils.formatAgeString(0.5))
   }
 }

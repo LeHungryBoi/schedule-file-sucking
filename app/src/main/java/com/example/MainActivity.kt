@@ -27,6 +27,6 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         // Refresh permissions and scan when returning from system settings
         viewModel.checkStorageAccess()
-        viewModel.scanNow()
+        viewModel.scanAllNow()
     }
 }

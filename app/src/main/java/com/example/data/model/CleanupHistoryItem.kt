@@ -5,5 +5,7 @@ data class CleanupHistoryItem(
     val timestamp: Long,
     val filesDeleted: Int,
     val bytesReclaimed: Long,
-    val isAutomated: Boolean
+    val isAutomated: Boolean,
+    val apksDeleted: Int = 0,
+    val screenshotsDeleted: Int = 0
 )

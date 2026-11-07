@@ -10,9 +10,9 @@ import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.MainActivity
-import com.example.R
 import com.example.data.preferences.PreferencesManager
 import com.example.data.storage.ApkScanner
+import com.example.data.storage.ScreenshotScanner
 import com.example.util.FormatUtils
 import kotlinx.coroutines.flow.first
 
@@ -31,51 +31,70 @@ class ApkCleanupWorker(
         val prefs = PreferencesManager(appContext)
         val config = prefs.scheduleConfigFlow.first()
 
-        if (!config.isEnabled) {
-            // Automation was disabled, skip execution
+        if (!config.isEnabled || (!config.cleanApksEnabled && !config.cleanScreenshotsEnabled)) {
+            // Automation disabled or neither cleaner active
             return Result.success()
         }
 
-        val customFolderUri = prefs.customFolderUriFlow.first()
-        val scanner = ApkScanner(appContext)
+        var apksDeleted = 0
+        var apkBytes = 0L
 
-        val scanResult = scanner.scanApkFiles(customFolderUri)
-        if (scanResult.files.isEmpty()) {
-            // Record successful run with 0 deleted
-            prefs.recordCleanupRun(
-                filesDeleted = 0,
-                bytesReclaimed = 0L,
-                isAutomated = true
-            )
-            return Result.success()
+        // 1. Clean APKs if enabled
+        if (config.cleanApksEnabled) {
+            val customFolderUri = prefs.customFolderUriFlow.first()
+            val apkScanner = ApkScanner(appContext)
+            val apkScanResult = apkScanner.scanApkFiles(customFolderUri)
+            if (apkScanResult.files.isNotEmpty()) {
+                val deleteResult = apkScanner.deleteApkFiles(apkScanResult.files)
+                apksDeleted = deleteResult.deletedCount
+                apkBytes = deleteResult.bytesReclaimed
+            }
         }
 
-        val deleteResult = scanner.deleteApkFiles(scanResult.files)
+        // 2. Clean expired screenshots if enabled
+        var screenshotsDeleted = 0
+        var screenshotBytes = 0L
 
+        if (config.cleanScreenshotsEnabled) {
+            val screenshotScanner = ScreenshotScanner(appContext)
+            val screenshotScan = screenshotScanner.scanScreenshots(config.screenshotMaxAgeDays)
+            val expiredList = screenshotScan.files.filter { it.isExpired }
+            if (expiredList.isNotEmpty()) {
+                val deleteResult = screenshotScanner.deleteScreenshots(expiredList)
+                screenshotsDeleted = deleteResult.deletedCount
+                screenshotBytes = deleteResult.bytesReclaimed
+            }
+        }
+
+        val totalDeleted = apksDeleted + screenshotsDeleted
+        val totalBytes = apkBytes + screenshotBytes
+
+        // Record history
         prefs.recordCleanupRun(
-            filesDeleted = deleteResult.deletedCount,
-            bytesReclaimed = deleteResult.bytesReclaimed,
+            apksDeleted = apksDeleted,
+            screenshotsDeleted = screenshotsDeleted,
+            bytesReclaimed = totalBytes,
             isAutomated = true
         )
 
-        if (config.notifyOnCleanup && deleteResult.deletedCount > 0) {
-            sendCleanupNotification(deleteResult.deletedCount, deleteResult.bytesReclaimed)
+        if (config.notifyOnCleanup && totalDeleted > 0) {
+            sendCleanupNotification(apksDeleted, screenshotsDeleted, totalBytes)
         }
 
         return Result.success()
     }
 
-    private fun sendCleanupNotification(count: Int, bytes: Long) {
+    private fun sendCleanupNotification(apksCount: Int, screenshotsCount: Int, bytes: Long) {
         val notificationManager = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
             ?: return
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "APK Cleanup Notifications",
+                "Cleanup Notifications",
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Notifies when background APK sweep finishes"
+                description = "Notifies when background cleaner maintenance finishes"
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -91,14 +110,18 @@ class ApkCleanupWorker(
         )
 
         val formattedSize = FormatUtils.formatBytes(bytes)
-        val fileWord = if (count == 1) "file" else "files"
-        val message = "Removed $count .apk $fileWord • Reclaimed $formattedSize"
+        val details = buildList {
+            if (apksCount > 0) add("$apksCount APK(s)")
+            if (screenshotsCount > 0) add("$screenshotsCount screenshot(s)")
+        }.joinToString(" and ")
+
+        val message = "Reclaimed $formattedSize • Removed $details"
 
         val notification = NotificationCompat.Builder(appContext, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle("Downloads Folder Cleaned")
+            .setContentTitle("Automated Maintenance Completed")
             .setContentText(message)
-            .setStyle(NotificationCompat.BigTextStyle().bigText("APK Sweeper automatically cleaned your Downloads folder:\n$message"))
+            .setStyle(NotificationCompat.BigTextStyle().bigText("Sweeper auto-cleaned your storage:\n$message"))
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

@@ -25,6 +25,9 @@ class PreferencesManager(private val context: Context) {
 
     companion object {
         private val KEY_AUTOMATION_ENABLED = booleanPreferencesKey("automation_enabled")
+        private val KEY_CLEAN_APKS_ENABLED = booleanPreferencesKey("clean_apks_enabled")
+        private val KEY_CLEAN_SCREENSHOTS_ENABLED = booleanPreferencesKey("clean_screenshots_enabled")
+        private val KEY_SCREENSHOT_MAX_AGE_DAYS = intPreferencesKey("screenshot_max_age_days")
         private val KEY_SCHEDULE_MODE = stringPreferencesKey("schedule_mode")
         private val KEY_INTERVAL_VALUE = intPreferencesKey("interval_value")
         private val KEY_INTERVAL_UNIT = stringPreferencesKey("interval_unit")
@@ -38,12 +41,16 @@ class PreferencesManager(private val context: Context) {
 
         private val KEY_LAST_CLEANUP_TIMESTAMP = longPreferencesKey("last_cleanup_timestamp")
         private val KEY_TOTAL_APKS_DELETED = intPreferencesKey("total_apks_deleted")
+        private val KEY_TOTAL_SCREENSHOTS_DELETED = intPreferencesKey("total_screenshots_deleted")
         private val KEY_TOTAL_BYTES_RECLAIMED = longPreferencesKey("total_bytes_reclaimed")
         private val KEY_HISTORY_JSON = stringPreferencesKey("history_json")
     }
 
     val scheduleConfigFlow: Flow<ScheduleConfig> = context.dataStore.data.map { prefs ->
         val enabled = prefs[KEY_AUTOMATION_ENABLED] ?: false
+        val cleanApks = prefs[KEY_CLEAN_APKS_ENABLED] ?: true
+        val cleanScreenshots = prefs[KEY_CLEAN_SCREENSHOTS_ENABLED] ?: true
+        val screenshotMaxAgeDays = prefs[KEY_SCREENSHOT_MAX_AGE_DAYS] ?: 1
         val modeStr = prefs[KEY_SCHEDULE_MODE] ?: ScheduleMode.INTERVAL.name
         val mode = try { ScheduleMode.valueOf(modeStr) } catch (_: Exception) { ScheduleMode.INTERVAL }
         val intervalValue = prefs[KEY_INTERVAL_VALUE] ?: 1
@@ -58,6 +65,9 @@ class PreferencesManager(private val context: Context) {
 
         ScheduleConfig(
             isEnabled = enabled,
+            cleanApksEnabled = cleanApks,
+            cleanScreenshotsEnabled = cleanScreenshots,
+            screenshotMaxAgeDays = screenshotMaxAgeDays,
             mode = mode,
             intervalValue = intervalValue,
             intervalUnit = unit,
@@ -78,6 +88,7 @@ class PreferencesManager(private val context: Context) {
         StatsData(
             lastCleanupTimestamp = prefs[KEY_LAST_CLEANUP_TIMESTAMP] ?: 0L,
             totalApksDeleted = prefs[KEY_TOTAL_APKS_DELETED] ?: 0,
+            totalScreenshotsDeleted = prefs[KEY_TOTAL_SCREENSHOTS_DELETED] ?: 0,
             totalBytesReclaimed = prefs[KEY_TOTAL_BYTES_RECLAIMED] ?: 0L
         )
     }
@@ -96,6 +107,9 @@ class PreferencesManager(private val context: Context) {
     suspend fun updateScheduleConfig(config: ScheduleConfig) {
         context.dataStore.edit { prefs ->
             prefs[KEY_AUTOMATION_ENABLED] = config.isEnabled
+            prefs[KEY_CLEAN_APKS_ENABLED] = config.cleanApksEnabled
+            prefs[KEY_CLEAN_SCREENSHOTS_ENABLED] = config.cleanScreenshotsEnabled
+            prefs[KEY_SCREENSHOT_MAX_AGE_DAYS] = config.screenshotMaxAgeDays
             prefs[KEY_SCHEDULE_MODE] = config.mode.name
             prefs[KEY_INTERVAL_VALUE] = config.intervalValue
             prefs[KEY_INTERVAL_UNIT] = config.intervalUnit.name
@@ -119,31 +133,36 @@ class PreferencesManager(private val context: Context) {
     }
 
     suspend fun recordCleanupRun(
-        filesDeleted: Int,
+        apksDeleted: Int,
+        screenshotsDeleted: Int,
         bytesReclaimed: Long,
         isAutomated: Boolean
     ) {
         context.dataStore.edit { prefs ->
             val now = System.currentTimeMillis()
             prefs[KEY_LAST_CLEANUP_TIMESTAMP] = now
-            val currentDeleted = prefs[KEY_TOTAL_APKS_DELETED] ?: 0
-            prefs[KEY_TOTAL_APKS_DELETED] = currentDeleted + filesDeleted
+            val currentApks = prefs[KEY_TOTAL_APKS_DELETED] ?: 0
+            prefs[KEY_TOTAL_APKS_DELETED] = currentApks + apksDeleted
+            val currentShots = prefs[KEY_TOTAL_SCREENSHOTS_DELETED] ?: 0
+            prefs[KEY_TOTAL_SCREENSHOTS_DELETED] = currentShots + screenshotsDeleted
             val currentBytes = prefs[KEY_TOTAL_BYTES_RECLAIMED] ?: 0L
             prefs[KEY_TOTAL_BYTES_RECLAIMED] = currentBytes + bytesReclaimed
 
-            // Append to history (keep top 20 items)
+            // Append to history (keep top 30 items)
             val currentHistory = parseHistoryJson(prefs[KEY_HISTORY_JSON] ?: "[]").toMutableList()
             currentHistory.add(
                 0,
                 CleanupHistoryItem(
                     id = now.toString(),
                     timestamp = now,
-                    filesDeleted = filesDeleted,
+                    filesDeleted = apksDeleted + screenshotsDeleted,
                     bytesReclaimed = bytesReclaimed,
-                    isAutomated = isAutomated
+                    isAutomated = isAutomated,
+                    apksDeleted = apksDeleted,
+                    screenshotsDeleted = screenshotsDeleted
                 )
             )
-            val trimmed = currentHistory.take(20)
+            val trimmed = currentHistory.take(30)
             prefs[KEY_HISTORY_JSON] = serializeHistoryJson(trimmed)
         }
     }
@@ -152,6 +171,7 @@ class PreferencesManager(private val context: Context) {
         context.dataStore.edit { prefs ->
             prefs[KEY_HISTORY_JSON] = "[]"
             prefs[KEY_TOTAL_APKS_DELETED] = 0
+            prefs[KEY_TOTAL_SCREENSHOTS_DELETED] = 0
             prefs[KEY_TOTAL_BYTES_RECLAIMED] = 0L
         }
     }
@@ -162,13 +182,18 @@ class PreferencesManager(private val context: Context) {
             val list = mutableListOf<CleanupHistoryItem>()
             for (i in 0 until array.length()) {
                 val obj = array.getJSONObject(i)
+                val files = obj.optInt("filesDeleted", 0)
+                val apks = obj.optInt("apksDeleted", files)
+                val shots = obj.optInt("screenshotsDeleted", 0)
                 list.add(
                     CleanupHistoryItem(
                         id = obj.optString("id", i.toString()),
                         timestamp = obj.optLong("timestamp", 0L),
-                        filesDeleted = obj.optInt("filesDeleted", 0),
+                        filesDeleted = if (apks + shots > 0) (apks + shots) else files,
                         bytesReclaimed = obj.optLong("bytesReclaimed", 0L),
-                        isAutomated = obj.optBoolean("isAutomated", true)
+                        isAutomated = obj.optBoolean("isAutomated", true),
+                        apksDeleted = apks,
+                        screenshotsDeleted = shots
                     )
                 )
             }
@@ -187,6 +212,8 @@ class PreferencesManager(private val context: Context) {
                 put("filesDeleted", item.filesDeleted)
                 put("bytesReclaimed", item.bytesReclaimed)
                 put("isAutomated", item.isAutomated)
+                put("apksDeleted", item.apksDeleted)
+                put("screenshotsDeleted", item.screenshotsDeleted)
             }
             array.put(obj)
         }
@@ -197,5 +224,6 @@ class PreferencesManager(private val context: Context) {
 data class StatsData(
     val lastCleanupTimestamp: Long,
     val totalApksDeleted: Int,
+    val totalScreenshotsDeleted: Int,
     val totalBytesReclaimed: Long
 )
