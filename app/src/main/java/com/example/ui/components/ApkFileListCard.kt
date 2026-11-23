@@ -36,12 +36,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.ApkFileInfo
 import com.example.util.FormatUtils
 
@@ -52,6 +55,7 @@ fun ApkFileListCard(
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(true) }
+    val context = LocalContext.current
 
     Card(
         modifier = modifier
@@ -85,7 +89,7 @@ fun ApkFileListCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Detected APK Files (${files.size})",
+                        text = stringResource(R.string.detected_apks_title, files.size),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
@@ -101,7 +105,9 @@ fun ApkFileListCard(
                     ) {
                         Icon(
                             imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = if (isExpanded) "Collapse" else "Expand",
+                            contentDescription = stringResource(
+                                if (isExpanded) R.string.collapse else R.string.expand
+                            ),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp)
                         )
@@ -128,7 +134,7 @@ fun ApkFileListCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "No .apk files found in Downloads",
+                            text = stringResource(R.string.no_apks_found),
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -183,7 +189,7 @@ fun ApkFileListCard(
                                         )
                                         Row {
                                             Text(
-                                                text = FormatUtils.formatBytes(apk.sizeBytes),
+                                                text = FormatUtils.formatBytes(context, apk.sizeBytes),
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     fontFamily = FontFamily.Monospace,
                                                     fontWeight = FontWeight.Bold,
@@ -193,7 +199,10 @@ fun ApkFileListCard(
                                             )
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text(
-                                                text = "• ${FormatUtils.formatDate(apk.lastModified)}",
+                                                text = stringResource(
+                                                    R.string.date_bullet,
+                                                    FormatUtils.formatDate(context, apk.lastModified)
+                                                ),
                                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -209,7 +218,7 @@ fun ApkFileListCard(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete this APK",
+                                        contentDescription = stringResource(R.string.delete_this_apk),
                                         tint = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.size(14.dp)
                                     )

@@ -9,6 +9,7 @@ import android.os.Environment
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.R
 import com.example.data.model.ApkFileInfo
 import com.example.data.model.CleanupHistoryItem
 import com.example.data.model.IntervalUnit
@@ -58,7 +59,7 @@ data class UiState(
     val history: List<CleanupHistoryItem> = emptyList(),
     val scannedApks: List<ApkFileInfo> = emptyList(),
     val totalApkBytes: Long = 0L,
-    val folderDisplayName: String = "Downloads",
+    val folderDisplayName: String = "",
     val scannedScreenshots: List<ScreenshotFileInfo> = emptyList(),
     val expiredScreenshotCount: Int = 0,
     val expiredScreenshotBytes: Long = 0L,
@@ -79,7 +80,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val apkScanner = ApkScanner(context)
     private val screenshotScanner = ScreenshotScanner(context)
 
-    private val _uiState = MutableStateFlow(UiState())
+    private val _uiState = MutableStateFlow(
+        UiState(folderDisplayName = context.getString(R.string.downloads))
+    )
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     init {
@@ -138,7 +141,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         saveAndReschedule(updated)
         _uiState.update {
             it.copy(
-                statusMessage = if (enabled) "Automation active with WorkManager" else "Automation paused"
+                statusMessage = if (enabled) {
+                    context.getString(R.string.status_automation_active)
+                } else {
+                    context.getString(R.string.automation_paused_summary)
+                }
             )
         }
     }
@@ -279,7 +286,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 it.copy(
                     isCleaning = false,
                     lastCleanResult = combined,
-                    statusMessage = "Purged ${deleteResult.deletedCount} expired screenshot(s)"
+                    statusMessage = context.getString(
+                        R.string.status_purged_screenshots,
+                        deleteResult.deletedCount
+                    )
                 )
             }
             scanScreenshots(_uiState.value.scheduleConfig.screenshotMaxAgeDays)
@@ -312,7 +322,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 it.copy(
                     isCleaning = false,
                     lastCleanResult = combined,
-                    statusMessage = "Cleaned ${deleteResult.deletedCount} APK file(s)"
+                    statusMessage = context.getString(
+                        R.string.status_cleaned_apks,
+                        deleteResult.deletedCount
+                    )
                 )
             }
             scanApks()
@@ -358,7 +371,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 it.copy(
                     isCleaning = false,
                     lastCleanResult = combined,
-                    statusMessage = "Cleaned $apksCount APK(s) and $shotCount screenshot(s)"
+                    statusMessage = context.getString(
+                        R.string.status_cleaned_all,
+                        apksCount,
+                        shotCount
+                    )
                 )
             }
             scanAllNow()

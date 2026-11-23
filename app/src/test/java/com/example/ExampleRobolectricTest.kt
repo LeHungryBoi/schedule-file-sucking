@@ -18,20 +18,21 @@ import java.util.Calendar
 @Config(sdk = [34])
 class ExampleRobolectricTest {
 
+  private val context: Context = ApplicationProvider.getApplicationContext()
+
   @Test
   fun `read app name string from context`() {
-    val context = ApplicationProvider.getApplicationContext<Context>()
     val appName = context.getString(R.string.app_name)
     assertEquals("Storage Sweeper", appName)
   }
 
   @Test
   fun `formatBytes formats correctly`() {
-    assertEquals("0 B", FormatUtils.formatBytes(0))
-    assertEquals("500 B", FormatUtils.formatBytes(500))
-    assertEquals("1.0 KB", FormatUtils.formatBytes(1024))
-    assertEquals("1.5 MB", FormatUtils.formatBytes((1.5 * 1024 * 1024).toLong()))
-    assertEquals("2.00 GB", FormatUtils.formatBytes((2L * 1024 * 1024 * 1024)))
+    assertEquals("0 B", FormatUtils.formatBytes(context, 0))
+    assertEquals("500 B", FormatUtils.formatBytes(context, 500))
+    assertEquals("1.0 KB", FormatUtils.formatBytes(context, 1024))
+    assertEquals("1.5 MB", FormatUtils.formatBytes(context, (1.5 * 1024 * 1024).toLong()))
+    assertEquals("2.00 GB", FormatUtils.formatBytes(context, (2L * 1024 * 1024 * 1024)))
   }
 
   @Test
@@ -67,8 +68,8 @@ class ExampleRobolectricTest {
 
   @Test
   fun `formatAgeString formats correctly`() {
-    assertEquals("1.0d ago", FormatUtils.formatAgeString(1.0))
-    assertEquals("3.5d ago", FormatUtils.formatAgeString(3.5))
-    assertEquals("12h ago", FormatUtils.formatAgeString(0.5))
+    assertEquals("1.0d ago", FormatUtils.formatAgeString(context, 1.0))
+    assertEquals("3.5d ago", FormatUtils.formatAgeString(context, 3.5))
+    assertEquals("12h ago", FormatUtils.formatAgeString(context, 0.5))
   }
 }

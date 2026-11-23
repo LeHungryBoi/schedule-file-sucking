@@ -33,11 +33,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.util.FormatUtils
 
 @Composable
@@ -57,6 +60,7 @@ fun QuickCleanCard(
 ) {
     val totalReclaimableBytes = apkBytes + expiredScreenshotBytes
     val totalPendingFiles = apkCount + expiredScreenshotCount
+    val context = LocalContext.current
 
     Card(
         modifier = modifier
@@ -92,7 +96,7 @@ fun QuickCleanCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Storage Sweep Monitor",
+                        text = stringResource(R.string.sweep_monitor_title),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
@@ -116,7 +120,7 @@ fun QuickCleanCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh",
+                            contentDescription = stringResource(R.string.refresh),
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -151,7 +155,7 @@ fun QuickCleanCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "APK DOWNLOADS",
+                                text = stringResource(R.string.apk_downloads_label),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold
@@ -171,7 +175,7 @@ fun QuickCleanCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "(${FormatUtils.formatBytes(apkBytes)})",
+                                text = "(${FormatUtils.formatBytes(context, apkBytes)})",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 10.sp,
                                     fontFamily = FontFamily.Monospace
@@ -215,7 +219,7 @@ fun QuickCleanCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "EXPIRED SHOTS",
+                                text = stringResource(R.string.expired_shots_label),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold
@@ -236,7 +240,7 @@ fun QuickCleanCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "(${FormatUtils.formatBytes(expiredScreenshotBytes)})",
+                                text = "(${FormatUtils.formatBytes(context, expiredScreenshotBytes)})",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 10.sp,
                                     fontFamily = FontFamily.Monospace
@@ -245,7 +249,7 @@ fun QuickCleanCard(
                             )
                         }
                         Text(
-                            text = "Auto-scanned via MediaStore",
+                            text = stringResource(R.string.auto_scanned_media_store),
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -272,12 +276,12 @@ fun QuickCleanCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Total Storage Reclaimable:",
+                        text = stringResource(R.string.total_reclaimable),
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = FormatUtils.formatBytes(totalReclaimableBytes),
+                        text = FormatUtils.formatBytes(context, totalReclaimableBytes),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Monospace,
@@ -313,7 +317,14 @@ fun QuickCleanCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (isCleaning) "Cleaning..." else "Sweep All (${FormatUtils.formatBytes(totalReclaimableBytes)})",
+                        text = if (isCleaning) {
+                            stringResource(R.string.cleaning)
+                        } else {
+                            stringResource(
+                                R.string.sweep_all,
+                                FormatUtils.formatBytes(context, totalReclaimableBytes)
+                            )
+                        },
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp
@@ -337,7 +348,7 @@ fun QuickCleanCard(
                     shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
-                        text = "APKs ($apkCount)",
+                        text = stringResource(R.string.apks_button, apkCount),
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp)
                     )
                 }
@@ -359,7 +370,7 @@ fun QuickCleanCard(
                     shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
-                        text = "Shots ($expiredScreenshotCount)",
+                        text = stringResource(R.string.shots_button, expiredScreenshotCount),
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                         color = if (expiredScreenshotCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                     )

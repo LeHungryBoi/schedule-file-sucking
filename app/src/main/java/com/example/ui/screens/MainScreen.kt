@@ -55,8 +55,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -82,6 +84,7 @@ fun MainScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     var showInfoDialog by remember { mutableStateOf(false) }
     var showConfirmCleanDialog by remember { mutableStateOf(false) }
@@ -122,7 +125,7 @@ fun MainScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(id = R.drawable.ic_apk_cleaner_1793936298908),
-                            contentDescription = "App Icon",
+                            contentDescription = stringResource(R.string.app_icon),
                             modifier = Modifier
                                 .size(28.dp)
                                 .clip(RoundedCornerShape(6.dp))
@@ -132,7 +135,7 @@ fun MainScreen(
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "Storage Sweeper",
+                                    text = stringResource(R.string.app_name),
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp
@@ -151,7 +154,7 @@ fun MainScreen(
                                 )
                             }
                             Text(
-                                text = "Downloads & Expired Screenshots Purger",
+                                text = stringResource(R.string.app_subtitle),
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -165,7 +168,7 @@ fun MainScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Scan Storage",
+                            contentDescription = stringResource(R.string.scan_storage),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
@@ -176,7 +179,7 @@ fun MainScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Info,
-                            contentDescription = "How It Works",
+                            contentDescription = stringResource(R.string.how_it_works),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
@@ -216,10 +219,10 @@ fun MainScreen(
                     horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     val tabs = listOf(
-                        AppTab.OVERVIEW to "Overview",
-                        AppTab.LEADERBOARD to "Leaderboard",
-                        AppTab.SCHEDULE to "Rules",
-                        AppTab.HISTORY to "Logs"
+                        AppTab.OVERVIEW to stringResource(R.string.tab_overview),
+                        AppTab.LEADERBOARD to stringResource(R.string.tab_leaderboard),
+                        AppTab.SCHEDULE to stringResource(R.string.tab_rules),
+                        AppTab.HISTORY to stringResource(R.string.tab_logs)
                     )
 
                     tabs.forEach { (tab, label) ->
@@ -416,15 +419,30 @@ fun MainScreen(
     // Confirmation Dialog before Manual Clean
     if (showConfirmCleanDialog) {
         val titleText = when (cleanTargetMode) {
-            "APKS" -> "Delete APK Installers?"
-            "SCREENSHOTS" -> "Purge Expired Screenshots?"
-            else -> "Execute Full Storage Sweep?"
+            "APKS" -> stringResource(R.string.confirm_delete_apks_title)
+            "SCREENSHOTS" -> stringResource(R.string.confirm_purge_screenshots_title)
+            else -> stringResource(R.string.confirm_full_sweep_title)
         }
 
         val descriptionText = when (cleanTargetMode) {
-            "APKS" -> "This will delete ${uiState.scannedApks.size} .apk installer file(s) from \"${uiState.folderDisplayName}\", reclaiming ${FormatUtils.formatBytes(uiState.totalApkBytes)}."
-            "SCREENSHOTS" -> "This will permanently delete ${uiState.expiredScreenshotCount} screenshot(s) older than ${uiState.scheduleConfig.screenshotMaxAgeDays} day(s), reclaiming ${FormatUtils.formatBytes(uiState.expiredScreenshotBytes)}."
-            else -> "This will purge ${uiState.scannedApks.size} APK file(s) and ${uiState.expiredScreenshotCount} expired screenshot(s), reclaiming a total of ${FormatUtils.formatBytes(uiState.totalApkBytes + uiState.expiredScreenshotBytes)}."
+            "APKS" -> stringResource(
+                R.string.confirm_delete_apks_message,
+                uiState.scannedApks.size,
+                uiState.folderDisplayName,
+                FormatUtils.formatBytes(context, uiState.totalApkBytes)
+            )
+            "SCREENSHOTS" -> stringResource(
+                R.string.confirm_purge_screenshots_message,
+                uiState.expiredScreenshotCount,
+                uiState.scheduleConfig.screenshotMaxAgeDays,
+                FormatUtils.formatBytes(context, uiState.expiredScreenshotBytes)
+            )
+            else -> stringResource(
+                R.string.confirm_full_sweep_message,
+                uiState.scannedApks.size,
+                uiState.expiredScreenshotCount,
+                FormatUtils.formatBytes(context, uiState.totalApkBytes + uiState.expiredScreenshotBytes)
+            )
         }
 
         AlertDialog(
@@ -455,12 +473,16 @@ fun MainScreen(
                     },
                     modifier = Modifier.testTag("confirm_clean_button")
                 ) {
-                    Text("Execute Purge", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.execute_purge),
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showConfirmCleanDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -478,23 +500,45 @@ fun MainScreen(
                         tint = MaterialTheme.colorScheme.secondary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Maintenance Complete")
+                    Text(stringResource(R.string.maintenance_complete))
                 }
             },
             text = {
                 val details = buildList {
-                    if (result.apksDeleted > 0) add("${result.apksDeleted} APK file(s) (${FormatUtils.formatBytes(result.apkBytes)})")
-                    if (result.screenshotsDeleted > 0) add("${result.screenshotsDeleted} screenshot(s) (${FormatUtils.formatBytes(result.screenshotBytes)})")
-                }.joinToString(" and ")
+                    if (result.apksDeleted > 0) {
+                        add(
+                            stringResource(
+                                R.string.result_apks,
+                                result.apksDeleted,
+                                FormatUtils.formatBytes(context, result.apkBytes)
+                            )
+                        )
+                    }
+                    if (result.screenshotsDeleted > 0) {
+                        add(
+                            stringResource(
+                                R.string.result_screenshots,
+                                result.screenshotsDeleted,
+                                FormatUtils.formatBytes(context, result.screenshotBytes)
+                            )
+                        )
+                    }
+                }.joinToString(stringResource(R.string.and_connector))
 
-                Text("Successfully purged $details, freeing a total of ${FormatUtils.formatBytes(result.totalBytes)}.")
+                Text(
+                    stringResource(
+                        R.string.result_summary,
+                        details,
+                        FormatUtils.formatBytes(context, result.totalBytes)
+                    )
+                )
             },
             confirmButton = {
                 TextButton(
                     onClick = { viewModel.dismissCleanResultDialog() },
                     modifier = Modifier.testTag("dismiss_result_button")
                 ) {
-                    Text("OK", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.ok), fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -512,44 +556,44 @@ fun MainScreen(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Architecture & Scheduling")
+                    Text(stringResource(R.string.architecture_title))
                 }
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "• 0% CPU Idle Overhead:",
+                        text = stringResource(R.string.architecture_idle_title),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = "The app does NOT run a permanent foreground service or memory-hogging background countdown.",
+                        text = stringResource(R.string.architecture_idle_body),
                         style = MaterialTheme.typography.bodySmall
                     )
 
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "• Exact Time-of-Day Alignment:",
+                        text = stringResource(R.string.architecture_time_title),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = "Whether using Interval mode or Weekly schedule, the cleaner calculates initial delay to fire at your exact designated hour & minute.",
+                        text = stringResource(R.string.architecture_time_body),
                         style = MaterialTheme.typography.bodySmall
                     )
 
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "• MediaStore Screenshot Scanning:",
+                        text = stringResource(R.string.architecture_media_title),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = "Scans system screenshots and evaluates age against your retention threshold (e.g. 1 day, 7 days). Any older screenshot is queued on the Purge Leaderboard.",
+                        text = stringResource(R.string.architecture_media_body),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showInfoDialog = false }) {
-                    Text("Understood", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.understood), fontWeight = FontWeight.Bold)
                 }
             }
         )

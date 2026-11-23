@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import androidx.documentfile.provider.DocumentFile
+import com.example.R
 import com.example.data.model.ApkFileInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -27,7 +28,7 @@ class ApkScanner(private val context: Context) {
 
     suspend fun scanApkFiles(customFolderUriString: String? = null): ScanResult = withContext(Dispatchers.IO) {
         val apks = mutableListOf<ApkFileInfo>()
-        var folderDisplayName = "Downloads"
+        var folderDisplayName = context.getString(R.string.downloads)
         var isSaf = false
 
         if (!customFolderUriString.isNullOrEmpty()) {
@@ -36,7 +37,7 @@ class ApkScanner(private val context: Context) {
                 val treeUri = Uri.parse(customFolderUriString)
                 val documentFolder = DocumentFile.fromTreeUri(context, treeUri)
                 if (documentFolder != null && documentFolder.isDirectory) {
-                    folderDisplayName = documentFolder.name ?: "Selected Folder"
+                    folderDisplayName = documentFolder.name ?: context.getString(R.string.selected_folder)
                     isSaf = true
                     scanDocumentFileDirectory(documentFolder, apks)
                 }

@@ -10,6 +10,7 @@ import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.MainActivity
+import com.example.R
 import com.example.data.preferences.PreferencesManager
 import com.example.data.storage.ApkScanner
 import com.example.data.storage.ScreenshotScanner
@@ -91,10 +92,10 @@ class ApkCleanupWorker(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Cleanup Notifications",
+                appContext.getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Notifies when background cleaner maintenance finishes"
+                description = appContext.getString(R.string.notification_channel_description)
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -109,19 +110,22 @@ class ApkCleanupWorker(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val formattedSize = FormatUtils.formatBytes(bytes)
+        val formattedSize = FormatUtils.formatBytes(appContext, bytes)
         val details = buildList {
-            if (apksCount > 0) add("$apksCount APK(s)")
-            if (screenshotsCount > 0) add("$screenshotsCount screenshot(s)")
-        }.joinToString(" and ")
+            if (apksCount > 0) add(appContext.getString(R.string.notification_apks, apksCount))
+            if (screenshotsCount > 0) add(appContext.getString(R.string.notification_screenshots, screenshotsCount))
+        }.joinToString(appContext.getString(R.string.and_connector))
 
-        val message = "Reclaimed $formattedSize • Removed $details"
+        val message = appContext.getString(R.string.notification_message, formattedSize, details)
 
         val notification = NotificationCompat.Builder(appContext, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
-            .setContentTitle("Automated Maintenance Completed")
+            .setContentTitle(appContext.getString(R.string.notification_title))
             .setContentText(message)
-            .setStyle(NotificationCompat.BigTextStyle().bigText("Sweeper auto-cleaned your storage:\n$message"))
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(appContext.getString(R.string.notification_big_text, message))
+            )
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

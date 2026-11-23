@@ -43,9 +43,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 
 @Composable
 fun StorageAccessCard(
@@ -125,12 +127,15 @@ fun StorageAccessCard(
 
                     Column {
                         Text(
-                            text = if (hasStorageAccess) "Storage Access Active" else "Storage Permission Needed",
+                            text = stringResource(
+                                if (hasStorageAccess) R.string.storage_access_active
+                                else R.string.storage_permission_needed
+                            ),
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, fontSize = 14.sp),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Download target: $folderDisplayName",
+                            text = stringResource(R.string.download_target, folderDisplayName),
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1
@@ -159,7 +164,7 @@ fun StorageAccessCard(
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Pick Custom Folder", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp))
+                        Text(stringResource(R.string.pick_custom_folder), style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp))
                     }
 
                     if (!customFolderUri.isNullOrEmpty()) {
@@ -177,14 +182,14 @@ fun StorageAccessCard(
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Reset", style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp))
+                            Text(stringResource(R.string.reset), style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp))
                         }
                     }
                 }
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        text = "To allow APK cleanups without user prompts on Android 11+, grant All Files Access or choose a folder.",
+                        text = stringResource(R.string.all_files_hint),
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -217,7 +222,7 @@ fun StorageAccessCard(
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Grant All Files Access", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 11.sp))
+                            Text(stringResource(R.string.grant_all_files_access), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 11.sp))
                         }
                     } else {
                         Button(
@@ -230,7 +235,7 @@ fun StorageAccessCard(
                                 .testTag("grant_storage_button"),
                             shape = RoundedCornerShape(6.dp)
                         ) {
-                            Text("Grant Storage Permission", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 11.sp))
+                            Text(stringResource(R.string.grant_storage_permission), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 11.sp))
                         }
                     }
 
@@ -249,7 +254,7 @@ fun StorageAccessCard(
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Or Select Directory via SAF Picker", style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
+                        Text(stringResource(R.string.select_directory_saf), style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
                     }
                 }
             }

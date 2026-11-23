@@ -1,5 +1,7 @@
 package com.example.data.model
 
+import androidx.annotation.StringRes
+import com.example.R
 import java.util.Calendar
 
 enum class ScheduleMode {
@@ -7,10 +9,10 @@ enum class ScheduleMode {
     DAY_OF_WEEK
 }
 
-enum class IntervalUnit(val label: String, val daysMultiplier: Long) {
-    DAYS("Days", 1L),
-    WEEKS("Weeks", 7L),
-    MONTHS("Months", 30L)
+enum class IntervalUnit(@param:StringRes val labelRes: Int, val daysMultiplier: Long) {
+    DAYS(R.string.days_unit, 1L),
+    WEEKS(R.string.weeks_unit, 7L),
+    MONTHS(R.string.months_unit, 30L)
 }
 
 data class ScheduleConfig(

@@ -41,13 +41,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.R
 import com.example.data.model.ScreenshotFileInfo
 import com.example.ui.viewmodel.ScreenshotFilter
 import com.example.util.FormatUtils
@@ -74,6 +77,7 @@ fun ScreenshotLeaderboardCard(
         ScreenshotFilter.EXPIRED_ONLY -> files.filter { it.isExpired }
         ScreenshotFilter.PENDING_EXPIRY -> files.filter { !it.isExpired }
     }
+    val context = LocalContext.current
 
     Card(
         modifier = modifier
@@ -109,7 +113,7 @@ fun ScreenshotLeaderboardCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Screenshot Purge Leaderboard",
+                        text = stringResource(R.string.leaderboard_title),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
@@ -124,7 +128,7 @@ fun ScreenshotLeaderboardCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh",
+                            contentDescription = stringResource(R.string.refresh),
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -150,7 +154,7 @@ fun ScreenshotLeaderboardCard(
             ) {
                 Column {
                     Text(
-                        text = "RETENTION THRESHOLD",
+                        text = stringResource(R.string.retention_threshold_header),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
@@ -159,7 +163,11 @@ fun ScreenshotLeaderboardCard(
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = if (retentionDays == 1) "Keep within 24h (older deleted)" else "Keep within $retentionDays days (older deleted)",
+                        text = if (retentionDays == 1) {
+                            stringResource(R.string.retention_24h)
+                        } else {
+                            stringResource(R.string.retention_days, retentionDays)
+                        },
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -187,7 +195,7 @@ fun ScreenshotLeaderboardCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "${days}d",
+                                text = stringResource(R.string.days_short, days),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     fontSize = 11.sp,
@@ -224,7 +232,7 @@ fun ScreenshotLeaderboardCard(
                 ) {
                     Column {
                         Text(
-                            text = "EXPIRED QUEUE",
+                            text = stringResource(R.string.expired_queue_label),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold
@@ -243,7 +251,7 @@ fun ScreenshotLeaderboardCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "(${FormatUtils.formatBytes(expiredBytes)})",
+                                text = "(${FormatUtils.formatBytes(context, expiredBytes)})",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 10.sp,
                                     fontFamily = FontFamily.Monospace
@@ -271,7 +279,7 @@ fun ScreenshotLeaderboardCard(
                 ) {
                     Column {
                         Text(
-                            text = "TOTAL SCANNED",
+                            text = stringResource(R.string.total_scanned_label),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold
@@ -289,7 +297,7 @@ fun ScreenshotLeaderboardCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "(${FormatUtils.formatBytes(totalBytes)})",
+                                text = "(${FormatUtils.formatBytes(context, totalBytes)})",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 10.sp,
                                     fontFamily = FontFamily.Monospace
@@ -322,7 +330,11 @@ fun ScreenshotLeaderboardCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Purge $expiredCount Expired (${FormatUtils.formatBytes(expiredBytes)})",
+                        text = stringResource(
+                            R.string.purge_expired_button,
+                            expiredCount,
+                            FormatUtils.formatBytes(context, expiredBytes)
+                        ),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
@@ -334,9 +346,12 @@ fun ScreenshotLeaderboardCard(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 val filters = listOf(
-                    ScreenshotFilter.ALL to "All (${files.size})",
-                    ScreenshotFilter.EXPIRED_ONLY to "Expired ($expiredCount)",
-                    ScreenshotFilter.PENDING_EXPIRY to "Safe (${files.size - expiredCount})"
+                    ScreenshotFilter.ALL to stringResource(R.string.filter_all, files.size),
+                    ScreenshotFilter.EXPIRED_ONLY to stringResource(R.string.filter_expired, expiredCount),
+                    ScreenshotFilter.PENDING_EXPIRY to stringResource(
+                        R.string.filter_safe,
+                        files.size - expiredCount
+                    )
                 )
                 filters.forEach { (itemFilter, label) ->
                     val isSelected = filter == itemFilter
@@ -395,7 +410,7 @@ fun ScreenshotLeaderboardCard(
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
-                            text = "No screenshots in this category",
+                            text = stringResource(R.string.no_screenshots_category),
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -426,6 +441,7 @@ fun ScreenshotLeaderboardRow(
     modifier: Modifier = Modifier
 ) {
     val isExpired = item.isExpired
+    val context = LocalContext.current
     val borderCol = if (isExpired) {
         MaterialTheme.colorScheme.error.copy(alpha = 0.45f)
     } else {
@@ -517,7 +533,7 @@ fun ScreenshotLeaderboardRow(
                 Spacer(modifier = Modifier.width(4.dp))
 
                 Text(
-                    text = FormatUtils.formatBytes(item.sizeBytes),
+                    text = FormatUtils.formatBytes(context, item.sizeBytes),
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 10.sp,
@@ -536,7 +552,10 @@ fun ScreenshotLeaderboardRow(
             ) {
                 // Age description
                 Text(
-                    text = "Age: ${FormatUtils.formatAgeString(item.ageDays)}",
+                    text = stringResource(
+                        R.string.age_label,
+                        FormatUtils.formatAgeString(context, item.ageDays)
+                    ),
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -557,7 +576,7 @@ fun ScreenshotLeaderboardRow(
                             .padding(horizontal = 4.dp, vertical = 1.dp)
                     ) {
                         Text(
-                            text = "EXPIRED",
+                            text = stringResource(R.string.expired_badge),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold
@@ -580,7 +599,7 @@ fun ScreenshotLeaderboardRow(
                             .padding(horizontal = 4.dp, vertical = 1.dp)
                     ) {
                         Text(
-                            text = FormatUtils.formatCountdown(item.timeUntilExpiryMillis),
+                            text = FormatUtils.formatCountdown(context, item.timeUntilExpiryMillis),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Medium
@@ -601,7 +620,7 @@ fun ScreenshotLeaderboardRow(
         ) {
             Icon(
                 imageVector = Icons.Default.Delete,
-                contentDescription = "Delete",
+                contentDescription = stringResource(R.string.delete),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 modifier = Modifier.size(14.dp)
             )

@@ -28,11 +28,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.CleanupHistoryItem
 import com.example.data.preferences.StatsData
 import com.example.util.FormatUtils
@@ -44,6 +47,7 @@ fun HistoryCard(
     onClearHistory: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -77,7 +81,7 @@ fun HistoryCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Lifetime Stats & Execution Log",
+                        text = stringResource(R.string.history_title),
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
@@ -92,7 +96,7 @@ fun HistoryCard(
                         modifier = Modifier.testTag("clear_history_button")
                     ) {
                         Text(
-                            text = "Clear Log",
+                            text = stringResource(R.string.clear_log),
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                             color = MaterialTheme.colorScheme.outline
                         )
@@ -116,7 +120,7 @@ fun HistoryCard(
                 ) {
                     Column {
                         Text(
-                            text = "APKS PURGED",
+                            text = stringResource(R.string.apks_purged_label),
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -142,7 +146,7 @@ fun HistoryCard(
                 ) {
                     Column {
                         Text(
-                            text = "SHOTS PURGED",
+                            text = stringResource(R.string.shots_purged_label),
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -168,12 +172,12 @@ fun HistoryCard(
                 ) {
                     Column {
                         Text(
-                            text = "SPACE RECLAIMED",
+                            text = stringResource(R.string.space_reclaimed_label),
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = FormatUtils.formatBytes(stats.totalBytesReclaimed),
+                            text = FormatUtils.formatBytes(context, stats.totalBytesReclaimed),
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily.Monospace,
@@ -197,7 +201,7 @@ fun HistoryCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No cleanup history logged yet.",
+                        text = stringResource(R.string.no_history),
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -239,26 +243,35 @@ fun HistoryCard(
                                 Column {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
-                                            text = if (item.isAutomated) "Scheduled Run" else "Manual Clean",
+                                            text = stringResource(
+                                                if (item.isAutomated) R.string.history_scheduled
+                                                else R.string.history_manual
+                                            ),
                                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         val breakdown = buildList {
-                                            if (item.apksDeleted > 0) add("${item.apksDeleted} APK")
-                                            if (item.screenshotsDeleted > 0) add("${item.screenshotsDeleted} Shot")
-                                            if (isEmpty() && item.filesDeleted > 0) add("${item.filesDeleted} files")
-                                        }.joinToString(" + ")
+                                            if (item.apksDeleted > 0) {
+                                                add(stringResource(R.string.history_apk, item.apksDeleted))
+                                            }
+                                            if (item.screenshotsDeleted > 0) {
+                                                add(stringResource(R.string.history_shot, item.screenshotsDeleted))
+                                            }
+                                            if (isEmpty() && item.filesDeleted > 0) {
+                                                add(stringResource(R.string.history_files, item.filesDeleted))
+                                            }
+                                        }.joinToString(stringResource(R.string.breakdown_connector))
 
                                         if (breakdown.isNotEmpty()) {
                                             Text(
-                                                text = "($breakdown)",
+                                                text = stringResource(R.string.history_breakdown, breakdown),
                                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
                                     Text(
-                                        text = FormatUtils.formatDate(item.timestamp),
+                                        text = FormatUtils.formatDate(context, item.timestamp),
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -266,7 +279,10 @@ fun HistoryCard(
                             }
 
                             Text(
-                                text = "+${FormatUtils.formatBytes(item.bytesReclaimed)}",
+                                text = stringResource(
+                                    R.string.plus_bytes,
+                                    FormatUtils.formatBytes(context, item.bytesReclaimed)
+                                ),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontFamily = FontFamily.Monospace,
                                     fontWeight = FontWeight.Bold,

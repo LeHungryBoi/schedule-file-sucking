@@ -31,11 +31,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.ScheduleConfig
 import com.example.util.FormatUtils
 
@@ -47,6 +50,7 @@ fun HeroAutomationCard(
     modifier: Modifier = Modifier
 ) {
     val isEnabled = config.isEnabled
+    val context = LocalContext.current
     val borderColor = if (isEnabled) {
         MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
     } else {
@@ -101,7 +105,9 @@ fun HeroAutomationCard(
                     ) {
                         Icon(
                             imageVector = if (isEnabled) Icons.Default.CheckCircle else Icons.Default.PauseCircle,
-                            contentDescription = if (isEnabled) "Active" else "Paused",
+                            contentDescription = stringResource(
+                                if (isEnabled) R.string.active else R.string.paused
+                            ),
                             tint = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
@@ -112,7 +118,10 @@ fun HeroAutomationCard(
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = if (isEnabled) "Automation Active" else "Automation Paused",
+                                text = stringResource(
+                                    if (isEnabled) R.string.automation_active_title
+                                    else R.string.automation_paused_title
+                                ),
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 15.sp
@@ -137,7 +146,9 @@ fun HeroAutomationCard(
                                     .padding(horizontal = 4.dp, vertical = 1.dp)
                             ) {
                                 Text(
-                                    text = if (isEnabled) "WORKMANAGER" else "STANDBY",
+                                    text = stringResource(
+                                        if (isEnabled) R.string.status_workmanager else R.string.status_standby
+                                    ),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontSize = 8.sp,
                                         fontWeight = FontWeight.Bold,
@@ -149,7 +160,11 @@ fun HeroAutomationCard(
                         }
 
                         Text(
-                            text = if (isEnabled) FormatUtils.formatScheduleSummary(config) else "Turn on to automatically run background cleanup",
+                            text = if (isEnabled) {
+                                FormatUtils.formatScheduleSummary(context, config)
+                            } else {
+                                stringResource(R.string.automation_off_hint)
+                            },
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1
@@ -195,7 +210,7 @@ fun HeroAutomationCard(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Next Execution:",
+                                text = stringResource(R.string.next_execution),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium
@@ -204,7 +219,7 @@ fun HeroAutomationCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = FormatUtils.formatNextScheduledExecution(config, lastRunTimestamp),
+                                text = FormatUtils.formatNextScheduledExecution(context, config, lastRunTimestamp),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
@@ -222,7 +237,7 @@ fun HeroAutomationCard(
                                         .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(3.dp))
                                         .padding(horizontal = 4.dp, vertical = 1.dp)
                                 ) {
-                                    Text("APK", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
+                                    Text(stringResource(R.string.apk_badge), style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
                                 }
                             }
                             if (config.cleanScreenshotsEnabled) {
@@ -232,7 +247,11 @@ fun HeroAutomationCard(
                                         .border(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f), RoundedCornerShape(3.dp))
                                         .padding(horizontal = 4.dp, vertical = 1.dp)
                                 ) {
-                                    Text("SHOTS (>${config.screenshotMaxAgeDays}d)", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.secondary)
+                                    Text(
+                                        stringResource(R.string.shots_badge, config.screenshotMaxAgeDays),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
                                 }
                             }
                         }

@@ -44,11 +44,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.IntervalUnit
 import com.example.data.model.ScheduleConfig
 import com.example.data.model.ScheduleMode
@@ -69,6 +72,7 @@ fun ScheduleConfigCard(
     onUpdateNotification: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -100,7 +104,7 @@ fun ScheduleConfigCard(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Scheduled Cleaning Rules",
+                    text = stringResource(R.string.schedule_rules_title),
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
@@ -124,7 +128,7 @@ fun ScheduleConfigCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        text = "ACTIVE AUTOMATION TARGETS",
+                        text = stringResource(R.string.active_targets_header),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
@@ -141,14 +145,14 @@ fun ScheduleConfigCard(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Clean Downloaded APKs",
+                                text = stringResource(R.string.clean_downloaded_apks),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 12.sp
                                 )
                             )
                             Text(
-                                text = "Deletes leftover .apk files from selected downloads folder",
+                                text = stringResource(R.string.clean_apk_desc),
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -172,14 +176,17 @@ fun ScheduleConfigCard(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Clean Expired Screenshots",
+                                text = stringResource(R.string.clean_expired_screenshots),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 12.sp
                                 )
                             )
                             Text(
-                                text = "Purges screenshots older than ${config.screenshotMaxAgeDays} day(s)",
+                                text = stringResource(
+                                    R.string.clean_screenshots_desc,
+                                    config.screenshotMaxAgeDays
+                                ),
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -211,11 +218,18 @@ fun ScheduleConfigCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Screenshot Retention Window:",
+                                    text = stringResource(R.string.retention_window_label),
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
                                 )
                                 Text(
-                                    text = if (config.screenshotMaxAgeDays == 1) "1 day (within 24h)" else "${config.screenshotMaxAgeDays} days",
+                                    text = if (config.screenshotMaxAgeDays == 1) {
+                                        stringResource(R.string.retention_one_day)
+                                    } else {
+                                        stringResource(
+                                            R.string.retention_many_days,
+                                            config.screenshotMaxAgeDays
+                                        )
+                                    },
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontFamily = FontFamily.Monospace,
                                         fontWeight = FontWeight.Bold,
@@ -242,7 +256,7 @@ fun ScheduleConfigCard(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
-                                            text = "${days}d",
+                                            text = stringResource(R.string.days_short, days),
                                             style = MaterialTheme.typography.labelSmall.copy(
                                                 fontSize = 10.sp,
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
@@ -285,7 +299,7 @@ fun ScheduleConfigCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "EXECUTION TIME OF DAY",
+                                text = stringResource(R.string.execution_time_header),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold,
@@ -296,7 +310,7 @@ fun ScheduleConfigCard(
                         }
 
                         Text(
-                            text = FormatUtils.formatTimeOnly(config.targetHour, config.targetMinute),
+                            text = FormatUtils.formatTimeOnly(context, config.targetHour, config.targetMinute),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Bold,
@@ -365,7 +379,7 @@ fun ScheduleConfigCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Custom Hour / Minute:",
+                            text = stringResource(R.string.custom_time_label),
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp)
                         )
 
@@ -379,7 +393,7 @@ fun ScheduleConfigCard(
                             }
 
                             Text(
-                                text = String.format("%02dh", config.targetHour),
+                                text = stringResource(R.string.format_hour_short, config.targetHour),
                                 style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 11.sp),
                                 modifier = Modifier.padding(horizontal = 4.dp)
                             )
@@ -403,7 +417,7 @@ fun ScheduleConfigCard(
                             }
 
                             Text(
-                                text = String.format("%02dm", config.targetMinute),
+                                text = stringResource(R.string.format_minute_short, config.targetMinute),
                                 style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 11.sp),
                                 modifier = Modifier.padding(horizontal = 4.dp)
                             )
@@ -441,7 +455,7 @@ fun ScheduleConfigCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Interval (Every X Days)",
+                        text = stringResource(R.string.mode_interval),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = if (isInterval) FontWeight.Bold else FontWeight.Normal,
@@ -462,7 +476,7 @@ fun ScheduleConfigCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Day of Week (Weekly)",
+                        text = stringResource(R.string.mode_weekly),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = if (isDayOfWeek) FontWeight.Bold else FontWeight.Normal,
@@ -485,7 +499,7 @@ fun ScheduleConfigCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Repeat Interval:",
+                        text = stringResource(R.string.repeat_interval),
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium)
                     )
 
@@ -504,7 +518,7 @@ fun ScheduleConfigCard(
                                     .padding(horizontal = 6.dp, vertical = 3.dp)
                             ) {
                                 Text(
-                                    text = "${preset}d",
+                                    text = stringResource(R.string.days_short, preset),
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontSize = 10.sp,
                                         fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
@@ -543,7 +557,7 @@ fun ScheduleConfigCard(
                                 .padding(horizontal = 8.dp, vertical = 5.dp)
                         ) {
                             Text(
-                                text = FormatUtils.getDayOfWeekName(dayInt, short = true),
+                                text = FormatUtils.getDayOfWeekName(context, dayInt, short = true),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 10.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
@@ -575,7 +589,7 @@ fun ScheduleConfigCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Skip if Battery Low",
+                        text = stringResource(R.string.skip_battery_low),
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp)
                     )
                 }
@@ -590,7 +604,7 @@ fun ScheduleConfigCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Only When Charging",
+                        text = stringResource(R.string.only_charging),
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp)
                     )
                 }
@@ -605,7 +619,7 @@ fun ScheduleConfigCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Alert on Purge",
+                        text = stringResource(R.string.alert_on_purge),
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp)
                     )
                 }
